@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>AETHER SHARD: Chrono Arena</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.2/pixi.min.js"></script>
+</head>
+<body>
+  <div id="game-wrapper">
+    <div id="canvas-container"></div>
+    <div id="screen-vignette"></div>
+    <div id="damage-flash"></div>
+
+    <!-- HUD Gameplay -->
+    <div id="hud" class="hidden">
+      <div class="hud-top">
+        <div class="hud-left">
+          <div class="stat-bar-group">
+            <div class="bar-label">
+              <span>HP</span>
+              <span id="hud-hp-text">100 / 100</span>
+            </div>
+            <div class="bar-track hp-track">
+              <div id="hud-hp-fill" class="bar-fill hp-fill"></div>
+            </div>
+          </div>
+          <div class="stat-bar-group">
+            <div class="bar-label">
+              <span>LVL <strong id="hud-level">1</strong></span>
+              <span id="hud-xp-text">0 / 50</span>
+            </div>
+            <div class="bar-track xp-track">
+              <div id="hud-xp-fill" class="bar-fill xp-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-center">
+          <div class="wave-badge">
+            <span class="wave-sub">WAVE</span>
+            <span id="hud-wave" class="wave-num">1</span>
+          </div>
+          <div id="boss-hud" class="boss-hud hidden">
+            <div class="boss-name" id="boss-name">WARDEN OF THE CORE</div>
+            <div class="bar-track boss-track">
+              <div id="boss-hp-fill" class="bar-fill boss-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-right">
+          <div class="resource-pill">
+            <span class="shard-icon">◆</span>
+            <span id="hud-shards">0</span>
+          </div>
+          <div class="resource-pill score-pill">
+            <span>PTS</span>
+            <span id="hud-score">0</span>
+          </div>
+          <div class="hud-actions">
+            <button id="btn-mute" class="icon-btn" title="Audio">🔊</button>
+            <button id="btn-pause" class="icon-btn" title="Pause">❚❚</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="wave-banner" class="wave-banner hidden">WAVE 1</div>
+
+      <div id="combo-display" class="combo-display hidden">
+        <span id="combo-count">0</span>x COMBO
+      </div>
+
+      <div id="desktop-hint" class="desktop-hint">
+        [WASD] Gerak &bull; [Klik Kiri] Tebas &bull; [Klik Kanan / E] Tembak &bull; [Spasi / Shift] Dash &bull; [Q] Nova
+      </div>
+
+      <div id="mobile-controls" class="mobile-controls">
+        <div id="joystick-zone" class="joystick-zone">
+          <div id="joystick-base" class="joystick-base">
+            <div id="joystick-stick" class="joystick-stick"></div>
+          </div>
+        </div>
+
+        <div class="action-pad">
+          <button id="touch-nova" class="touch-btn btn-nova" data-skill="nova">
+            <span>NOVA</span>
+            <div class="cd-overlay" id="cd-nova"></div>
+          </button>
+          <button id="touch-dash" class="touch-btn btn-dash" data-skill="dash">
+            <span>DASH</span>
+            <div class="cd-overlay" id="cd-dash"></div>
+          </button>
+          <button id="touch-shoot" class="touch-btn btn-shoot" data-skill="shoot">
+            <span>BOLT</span>
+            <div class="cd-overlay" id="cd-shoot"></div>
+          </button>
+          <button id="touch-attack" class="touch-btn btn-attack">
+            <span>SLASH</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Menu Overlay -->
+    <div id="menu-main" class="overlay-screen">
+      <div class="glass-panel main-panel">
+        <div class="title-tag">WEBGL ACTION ROGUELIKE</div>
+        <h1 class="game-title">AETHER <span>SHARD</span></h1>
+        <p class="game-subtitle">CHRONO ARENA</p>
+
+        <div class="meta-stats">
+          <div class="meta-box">
+            <span class="meta-label">BANK SHARDS</span>
+            <span id="menu-bank-shards" class="meta-val">◆ 0</span>
+          </div>
+          <div class="meta-box">
+            <span class="meta-label">BEST WAVE</span>
+            <span id="menu-best-wave" class="meta-val">WAVE 1</span>
+          </div>
+          <div class="meta-box">
+            <span class="meta-label">HIGH SCORE</span>
+            <span id="menu-high-score" class="meta-val">0</span>
+          </div>
+        </div>
+
+        <div class="menu-buttons">
+          <button id="btn-start-game" class="primary-btn">MASUK ARENA</button>
+          <button id="btn-open-armory" class="secondary-btn">SANCTUARY ARMORY</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Permanent Armory Upgrade Modal -->
+    <div id="menu-armory" class="overlay-screen hidden">
+      <div class="glass-panel armory-panel">
+        <div class="panel-header">
+          <h2>SANCTUARY ARMORY</h2>
+          <div class="resource-pill">
+            <span class="shard-icon">◆</span>
+            <span id="armory-shards">0</span>
+          </div>
+        </div>
+        <p class="panel-desc">Upgrade permanen menggunakan Aether Shards yang dikumpulkan dari arena.</p>
+        <div id="armory-grid" class="armory-grid"></div>
+        <button id="btn-close-armory" class="secondary-btn full-width">KEMBALI KE MENU</button>
+      </div>
+    </div>
+
+    <!-- In-Run Level Up / Draft Upgrade Modal -->
+    <div id="menu-levelup" class="overlay-screen hidden">
+      <div class="glass-panel levelup-panel">
+        <div class="title-tag">AETHER RESONANCE</div>
+        <h2>PILIH BERKAH CHRONO</h2>
+        <div id="upgrade-cards" class="upgrade-cards"></div>
+      </div>
+    </div>
+
+    <!-- Pause Overlay -->
+    <div id="menu-pause" class="overlay-screen hidden">
+      <div class="glass-panel pause-panel">
+        <h2>GAME DIJEDA</h2>
+        <div class="menu-buttons">
+          <button id="btn-resume" class="primary-btn">LANJUTKAN</button>
+          <button id="btn-restart-pause" class="secondary-btn">ULANGI RUN</button>
+          <button id="btn-quit-menu" class="danger-btn">KELUAR KE MENU</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div id="menu-gameover" class="overlay-screen hidden">
+      <div class="glass-panel gameover-panel">
+        <div class="title-tag danger-tag">CHRONO LINK TERPUTUS</div>
+        <h2>ARENA FALLEN</h2>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span>WAVE DICAPAI</span>
+            <strong id="go-wave">1</strong>
+          </div>
+          <div class="summary-item">
+            <span>MUSUH DIKALAHKAN</span>
+            <strong id="go-kills">0</strong>
+          </div>
+          <div class="summary-item">
+            <span>SKOR AKHIR</span>
+            <strong id="go-score">0</strong>
+          </div>
+          <div class="summary-item">
+            <span>SHARDS DIDAPAT</span>
+            <strong id="go-shards" class="shard-text">+0</strong>
+          </div>
+        </div>
+        <div class="menu-buttons">
+          <button id="btn-play-again" class="primary-btn">MAIN LAGI</button>
+          <button id="btn-go-menu" class="secondary-btn">MENU UTAMA</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="audio.js"></script>
+  <script src="textures.js"></script>
+  <script src="data.js"></script>
+  <script src="entities.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
